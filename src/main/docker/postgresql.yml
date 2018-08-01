@@ -1,0 +1,11 @@
+version: '2'
+services:
+    nurseback-postgresql:
+        image: postgres:10.4
+        # volumes:
+        #     - ~/volumes/jhipster/nurseback/postgresql/:/var/lib/postgresql/data/
+        environment:
+            - POSTGRES_USER=nurseback
+            - POSTGRES_PASSWORD=
+        ports:
+            - 5432:5432
