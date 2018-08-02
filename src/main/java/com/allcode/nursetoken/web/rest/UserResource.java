@@ -101,6 +101,23 @@ public class UserResource {
         } else {
             User newUser = userService.createUser(userDTO);
             mailService.sendCreationEmail(newUser);
+
+            //Crear wallet
+            /*String key = System.getenv("PASSPHRASE_VALUE");
+            String url = System.getenv("NEO_API_URL") + "/wallet/new";
+            JSONObject response = MiddlewareRequest.post(url, null);
+
+            Wallet wallet = new Wallet();
+
+            Wallet wallet = new Wallet(
+                response.getString("address"),
+                CryptUtils.encrypt(response.getString("private_key"), key),
+                CryptUtils.encrypt(response.getString("public_key"), key),
+                CryptUtils.encrypt(response.getString("public_key_hash"), key),
+                CryptUtils.encrypt(response.getString("wif"), key),
+                newUser
+            );*/
+
             return ResponseEntity.created(new URI("/api/users/" + newUser.getLogin()))
                 .headers(HeaderUtil.createAlert( "userManagement.created", newUser.getLogin()))
                 .body(newUser);

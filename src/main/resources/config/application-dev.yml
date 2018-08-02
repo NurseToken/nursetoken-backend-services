@@ -32,9 +32,9 @@ spring:
         serialization.indent_output: true
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:postgresql://localhost:5432/nurseback
-        username: postgres
-        password: 1234
+        url: ${PG_URL_DEV}
+        username: ${PG_USER_DEV}
+        password: ${PG_PASS_DEV}
     jpa:
         database-platform: io.github.jhipster.domain.util.FixedPostgreSQL82Dialect
         database: POSTGRESQL
