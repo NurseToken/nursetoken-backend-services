@@ -1,6 +1,8 @@
 package com.allcode.nursetoken.web.rest;
 
 import com.allcode.nursetoken.config.Constants;
+import com.allcode.nursetoken.domain.Wallet;
+import com.allcode.nursetoken.repository.WalletRepository;
 import com.codahale.metrics.annotation.Timed;
 import com.allcode.nursetoken.domain.User;
 import com.allcode.nursetoken.repository.UserRepository;
@@ -17,6 +19,7 @@ import io.github.jhipster.web.util.ResponseUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -58,6 +61,7 @@ import java.util.*;
 @RequestMapping("/api")
 public class UserResource {
 
+    private static final String ENTITY_NAME = "user";
     private final Logger log = LoggerFactory.getLogger(UserResource.class);
 
     private final UserService userService;
@@ -65,6 +69,9 @@ public class UserResource {
     private final UserRepository userRepository;
 
     private final MailService mailService;
+
+    @Autowired
+    WalletRepository walletRepository;
 
     public UserResource(UserService userService, UserRepository userRepository, MailService mailService) {
 
@@ -102,21 +109,11 @@ public class UserResource {
             User newUser = userService.createUser(userDTO);
             mailService.sendCreationEmail(newUser);
 
-            //Crear wallet
-            /*String key = System.getenv("PASSPHRASE_VALUE");
-            String url = System.getenv("NEO_API_URL") + "/wallet/new";
-            JSONObject response = MiddlewareRequest.post(url, null);
-
-            Wallet wallet = new Wallet();
-
-            Wallet wallet = new Wallet(
-                response.getString("address"),
-                CryptUtils.encrypt(response.getString("private_key"), key),
-                CryptUtils.encrypt(response.getString("public_key"), key),
-                CryptUtils.encrypt(response.getString("public_key_hash"), key),
-                CryptUtils.encrypt(response.getString("wif"), key),
-                newUser
-            );*/
+            Wallet wallet = Wallet.createFromApiNeo(newUser);
+            log.debug("REST request to save Wallet : {}", wallet);
+            if (wallet != null) {
+                walletRepository.save(wallet);
+            }
 
             return ResponseEntity.created(new URI("/api/users/" + newUser.getLogin()))
                 .headers(HeaderUtil.createAlert( "userManagement.created", newUser.getLogin()))

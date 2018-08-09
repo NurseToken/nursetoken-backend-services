@@ -58,6 +58,22 @@ public class UserService {
             });
     }
 
+    public User getCurrentUser() {
+        if (!SecurityUtils.getCurrentUserLogin().isPresent()) {
+            return null;
+        }
+
+        String login = SecurityUtils.getCurrentUserLogin().get();
+        Optional<User> userOptional = userRepository.findOneByLogin(login);
+
+        if (!userOptional.isPresent()) {
+            log.debug("No Login");
+            return null;
+        }
+
+        return  userOptional.get();
+    }
+
     public Optional<User> completePasswordReset(String newPassword, String key) {
        log.debug("Reset user password for reset key {}", key);
 
