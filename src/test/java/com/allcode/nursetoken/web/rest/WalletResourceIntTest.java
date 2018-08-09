@@ -43,17 +43,17 @@ public class WalletResourceIntTest {
     private static final String DEFAULT_ADDRESS = "AAAAAAAAAA";
     private static final String UPDATED_ADDRESS = "BBBBBBBBBB";
 
-    private static final String DEFAULT_PRIVATE_KEY = "AAAAAAAAAA";
-    private static final String UPDATED_PRIVATE_KEY = "BBBBBBBBBB";
+    private static final String DEFAULT_ENCRIPTED_PRIVATE_KEY = "AAAAAAAAAA";
+    private static final String UPDATED_ENCRIPTED_PRIVATE_KEY = "BBBBBBBBBB";
 
-    private static final String DEFAULT_PUBLIC_KEY = "AAAAAAAAAA";
-    private static final String UPDATED_PUBLIC_KEY = "BBBBBBBBBB";
+    private static final String DEFAULT_ENCRIPTED_PUBLIC_KEY = "AAAAAAAAAA";
+    private static final String UPDATED_ENCRIPTED_PUBLIC_KEY = "BBBBBBBBBB";
 
-    private static final String DEFAULT_PUBLIC_KEY_HASH = "AAAAAAAAAA";
-    private static final String UPDATED_PUBLIC_KEY_HASH = "BBBBBBBBBB";
+    private static final String DEFAULT_ENCRIPTED_PUBLIC_KEY_HASH = "AAAAAAAAAA";
+    private static final String UPDATED_ENCRIPTED_PUBLIC_KEY_HASH = "BBBBBBBBBB";
 
-    private static final String DEFAULT_WIF = "AAAAAAAAAA";
-    private static final String UPDATED_WIF = "BBBBBBBBBB";
+    private static final String DEFAULT_ENCRIPTED_WIF = "AAAAAAAAAA";
+    private static final String UPDATED_ENCRIPTED_WIF = "BBBBBBBBBB";
 
     @Autowired
     private WalletRepository walletRepository;
@@ -95,10 +95,10 @@ public class WalletResourceIntTest {
     public static Wallet createEntity(EntityManager em) {
         Wallet wallet = new Wallet()
             .address(DEFAULT_ADDRESS)
-            .privateKey(DEFAULT_PRIVATE_KEY)
-            .publicKey(DEFAULT_PUBLIC_KEY)
-            .publicKeyHash(DEFAULT_PUBLIC_KEY_HASH)
-            .wif(DEFAULT_WIF);
+            .encriptedPrivateKey(DEFAULT_ENCRIPTED_PRIVATE_KEY)
+            .encriptedPublicKey(DEFAULT_ENCRIPTED_PUBLIC_KEY)
+            .encriptedPublicKeyHash(DEFAULT_ENCRIPTED_PUBLIC_KEY_HASH)
+            .encriptedWif(DEFAULT_ENCRIPTED_WIF);
         // Add required entity
         User user = UserResourceIntTest.createEntity(em);
         em.persist(user);
@@ -128,10 +128,10 @@ public class WalletResourceIntTest {
         assertThat(walletList).hasSize(databaseSizeBeforeCreate + 1);
         Wallet testWallet = walletList.get(walletList.size() - 1);
         assertThat(testWallet.getAddress()).isEqualTo(DEFAULT_ADDRESS);
-        assertThat(testWallet.getPrivateKey()).isEqualTo(DEFAULT_PRIVATE_KEY);
-        assertThat(testWallet.getPublicKey()).isEqualTo(DEFAULT_PUBLIC_KEY);
-        assertThat(testWallet.getPublicKeyHash()).isEqualTo(DEFAULT_PUBLIC_KEY_HASH);
-        assertThat(testWallet.getWif()).isEqualTo(DEFAULT_WIF);
+        assertThat(testWallet.getEncriptedPrivateKey()).isEqualTo(DEFAULT_ENCRIPTED_PRIVATE_KEY);
+        assertThat(testWallet.getEncriptedPublicKey()).isEqualTo(DEFAULT_ENCRIPTED_PUBLIC_KEY);
+        assertThat(testWallet.getEncriptedPublicKeyHash()).isEqualTo(DEFAULT_ENCRIPTED_PUBLIC_KEY_HASH);
+        assertThat(testWallet.getEncriptedWif()).isEqualTo(DEFAULT_ENCRIPTED_WIF);
     }
 
     @Test
@@ -173,10 +173,10 @@ public class WalletResourceIntTest {
 
     @Test
     @Transactional
-    public void checkPrivateKeyIsRequired() throws Exception {
+    public void checkEncriptedPrivateKeyIsRequired() throws Exception {
         int databaseSizeBeforeTest = walletRepository.findAll().size();
         // set the field null
-        wallet.setPrivateKey(null);
+        wallet.setEncriptedPrivateKey(null);
 
         // Create the Wallet, which fails.
 
@@ -191,10 +191,10 @@ public class WalletResourceIntTest {
 
     @Test
     @Transactional
-    public void checkPublicKeyIsRequired() throws Exception {
+    public void checkEncriptedPublicKeyIsRequired() throws Exception {
         int databaseSizeBeforeTest = walletRepository.findAll().size();
         // set the field null
-        wallet.setPublicKey(null);
+        wallet.setEncriptedPublicKey(null);
 
         // Create the Wallet, which fails.
 
@@ -209,10 +209,10 @@ public class WalletResourceIntTest {
 
     @Test
     @Transactional
-    public void checkPublicKeyHashIsRequired() throws Exception {
+    public void checkEncriptedPublicKeyHashIsRequired() throws Exception {
         int databaseSizeBeforeTest = walletRepository.findAll().size();
         // set the field null
-        wallet.setPublicKeyHash(null);
+        wallet.setEncriptedPublicKeyHash(null);
 
         // Create the Wallet, which fails.
 
@@ -227,10 +227,10 @@ public class WalletResourceIntTest {
 
     @Test
     @Transactional
-    public void checkWifIsRequired() throws Exception {
+    public void checkEncriptedWifIsRequired() throws Exception {
         int databaseSizeBeforeTest = walletRepository.findAll().size();
         // set the field null
-        wallet.setWif(null);
+        wallet.setEncriptedWif(null);
 
         // Create the Wallet, which fails.
 
@@ -255,12 +255,12 @@ public class WalletResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(wallet.getId().intValue())))
             .andExpect(jsonPath("$.[*].address").value(hasItem(DEFAULT_ADDRESS.toString())))
-            .andExpect(jsonPath("$.[*].privateKey").value(hasItem(DEFAULT_PRIVATE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].publicKey").value(hasItem(DEFAULT_PUBLIC_KEY.toString())))
-            .andExpect(jsonPath("$.[*].publicKeyHash").value(hasItem(DEFAULT_PUBLIC_KEY_HASH.toString())))
-            .andExpect(jsonPath("$.[*].wif").value(hasItem(DEFAULT_WIF.toString())));
+            .andExpect(jsonPath("$.[*].encriptedEncriptedPrivateKey").value(hasItem(DEFAULT_ENCRIPTED_PRIVATE_KEY.toString())))
+            .andExpect(jsonPath("$.[*].encriptedEncriptedPublicKey").value(hasItem(DEFAULT_ENCRIPTED_PUBLIC_KEY.toString())))
+            .andExpect(jsonPath("$.[*].encriptedEncriptedPublicKeyHash").value(hasItem(DEFAULT_ENCRIPTED_PUBLIC_KEY_HASH.toString())))
+            .andExpect(jsonPath("$.[*].encriptedWif").value(hasItem(DEFAULT_ENCRIPTED_WIF.toString())));
     }
-    
+
 
     @Test
     @Transactional
@@ -274,10 +274,10 @@ public class WalletResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(wallet.getId().intValue()))
             .andExpect(jsonPath("$.address").value(DEFAULT_ADDRESS.toString()))
-            .andExpect(jsonPath("$.privateKey").value(DEFAULT_PRIVATE_KEY.toString()))
-            .andExpect(jsonPath("$.publicKey").value(DEFAULT_PUBLIC_KEY.toString()))
-            .andExpect(jsonPath("$.publicKeyHash").value(DEFAULT_PUBLIC_KEY_HASH.toString()))
-            .andExpect(jsonPath("$.wif").value(DEFAULT_WIF.toString()));
+            .andExpect(jsonPath("$.encriptedEncriptedPrivateKey").value(DEFAULT_ENCRIPTED_PRIVATE_KEY.toString()))
+            .andExpect(jsonPath("$.encriptedEncriptedPublicKey").value(DEFAULT_ENCRIPTED_PUBLIC_KEY.toString()))
+            .andExpect(jsonPath("$.encriptedEncriptedPublicKeyHash").value(DEFAULT_ENCRIPTED_PUBLIC_KEY_HASH.toString()))
+            .andExpect(jsonPath("$.encriptedWif").value(DEFAULT_ENCRIPTED_WIF.toString()));
     }
     @Test
     @Transactional
@@ -301,10 +301,10 @@ public class WalletResourceIntTest {
         em.detach(updatedWallet);
         updatedWallet
             .address(UPDATED_ADDRESS)
-            .privateKey(UPDATED_PRIVATE_KEY)
-            .publicKey(UPDATED_PUBLIC_KEY)
-            .publicKeyHash(UPDATED_PUBLIC_KEY_HASH)
-            .wif(UPDATED_WIF);
+            .encriptedPrivateKey(UPDATED_ENCRIPTED_PRIVATE_KEY)
+            .encriptedPublicKey(UPDATED_ENCRIPTED_PUBLIC_KEY)
+            .encriptedPublicKeyHash(UPDATED_ENCRIPTED_PUBLIC_KEY_HASH)
+            .encriptedWif(UPDATED_ENCRIPTED_WIF);
 
         restWalletMockMvc.perform(put("/api/wallets")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -316,10 +316,10 @@ public class WalletResourceIntTest {
         assertThat(walletList).hasSize(databaseSizeBeforeUpdate);
         Wallet testWallet = walletList.get(walletList.size() - 1);
         assertThat(testWallet.getAddress()).isEqualTo(UPDATED_ADDRESS);
-        assertThat(testWallet.getPrivateKey()).isEqualTo(UPDATED_PRIVATE_KEY);
-        assertThat(testWallet.getPublicKey()).isEqualTo(UPDATED_PUBLIC_KEY);
-        assertThat(testWallet.getPublicKeyHash()).isEqualTo(UPDATED_PUBLIC_KEY_HASH);
-        assertThat(testWallet.getWif()).isEqualTo(UPDATED_WIF);
+        assertThat(testWallet.getEncriptedPrivateKey()).isEqualTo(UPDATED_ENCRIPTED_PRIVATE_KEY);
+        assertThat(testWallet.getEncriptedPublicKey()).isEqualTo(UPDATED_ENCRIPTED_PUBLIC_KEY);
+        assertThat(testWallet.getEncriptedPublicKeyHash()).isEqualTo(UPDATED_ENCRIPTED_PUBLIC_KEY_HASH);
+        assertThat(testWallet.getEncriptedWif()).isEqualTo(UPDATED_ENCRIPTED_WIF);
     }
 
     @Test

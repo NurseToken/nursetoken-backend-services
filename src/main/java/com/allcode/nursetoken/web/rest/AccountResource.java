@@ -1,5 +1,7 @@
 package com.allcode.nursetoken.web.rest;
 
+import com.allcode.nursetoken.domain.Wallet;
+import com.allcode.nursetoken.repository.WalletRepository;
 import com.codahale.metrics.annotation.Timed;
 
 import com.allcode.nursetoken.domain.User;
@@ -15,6 +17,7 @@ import com.allcode.nursetoken.web.rest.vm.ManagedUserVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,6 +40,9 @@ public class AccountResource {
     private final UserService userService;
 
     private final MailService mailService;
+
+    @Autowired
+    private WalletRepository walletRepository;
 
     public AccountResource(UserRepository userRepository, UserService userService, MailService mailService) {
 
@@ -78,6 +84,12 @@ public class AccountResource {
         Optional<User> user = userService.activateRegistration(key);
         if (!user.isPresent()) {
             throw new InternalServerErrorException("No user was found for this activation key");
+        }
+
+        Wallet wallet = Wallet.createFromApiNeo(user.get());
+        log.debug("REST request to save Wallet : {}", wallet);
+        if (wallet != null) {
+            walletRepository.save(wallet);
         }
     }
 

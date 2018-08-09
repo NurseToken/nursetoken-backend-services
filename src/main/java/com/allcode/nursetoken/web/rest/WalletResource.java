@@ -1,5 +1,9 @@
 package com.allcode.nursetoken.web.rest;
 
+import com.allcode.nursetoken.domain.UpdatableWallet;
+import com.allcode.nursetoken.domain.User;
+import com.allcode.nursetoken.security.AuthoritiesConstants;
+import com.allcode.nursetoken.service.UserService;
 import com.codahale.metrics.annotation.Timed;
 import com.allcode.nursetoken.domain.Wallet;
 import com.allcode.nursetoken.repository.WalletRepository;
@@ -9,11 +13,13 @@ import com.allcode.nursetoken.web.rest.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -36,6 +42,9 @@ public class WalletResource {
 
     private final WalletRepository walletRepository;
 
+    @Autowired
+    UserService userService;
+
     public WalletResource(WalletRepository walletRepository) {
         this.walletRepository = walletRepository;
     }
@@ -43,17 +52,24 @@ public class WalletResource {
     /**
      * POST  /wallets : Create a new wallet.
      *
-     * @param wallet the wallet to create
      * @return the ResponseEntity with status 201 (Created) and with body the new wallet, or with status 400 (Bad Request) if the wallet has already an ID
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/wallets")
     @Timed
-    public ResponseEntity<Wallet> createWallet(@Valid @RequestBody Wallet wallet) throws URISyntaxException {
-        log.debug("REST request to save Wallet : {}", wallet);
-        if (wallet.getId() != null) {
-            throw new BadRequestAlertException("A new wallet cannot already have an ID", ENTITY_NAME, "idexists");
+    @Secured(AuthoritiesConstants.USER)
+    public ResponseEntity<Wallet> createWallet(
+        @Valid @RequestBody UpdatableWallet updatableWallet
+    ) throws URISyntaxException {
+        User user = userService.getCurrentUser();
+        Wallet wallet = Wallet.createFromApiNeo(user);
+
+        if (wallet == null) {
+            throw new BadRequestAlertException("Error when try to create wallet", ENTITY_NAME, "neoapierror");
         }
+
+        wallet.setName(updatableWallet.getName());
+        log.debug("REST request to save Wallet : {}", wallet);
         Wallet result = walletRepository.save(wallet);
         return ResponseEntity.created(new URI("/api/wallets/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
@@ -63,7 +79,7 @@ public class WalletResource {
     /**
      * PUT  /wallets : Updates an existing wallet.
      *
-     * @param wallet the wallet to update
+     * @param updatableWallet to update
      * @return the ResponseEntity with status 200 (OK) and with body the updated wallet,
      * or with status 400 (Bad Request) if the wallet is not valid,
      * or with status 500 (Internal Server Error) if the wallet couldn't be updated
@@ -71,11 +87,30 @@ public class WalletResource {
      */
     @PutMapping("/wallets")
     @Timed
-    public ResponseEntity<Wallet> updateWallet(@Valid @RequestBody Wallet wallet) throws URISyntaxException {
-        log.debug("REST request to update Wallet : {}", wallet);
-        if (wallet.getId() == null) {
+    @Secured(AuthoritiesConstants.USER)
+    public ResponseEntity<Wallet> updateWallet(
+        @Valid @RequestBody UpdatableWallet updatableWallet
+    ) throws URISyntaxException {
+
+        if (updatableWallet.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
+
+        Optional<Wallet> optionalWallet = walletRepository.findById(updatableWallet.getId());
+
+        if(!optionalWallet.isPresent()){
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        }
+
+        Wallet wallet = optionalWallet.get();
+
+        if(!userService.getCurrentUser().getId().equals(wallet.getOwner().getId())){
+            throw new BadRequestAlertException("You not have permission", ENTITY_NAME, "unauthorize");
+        }
+
+        wallet.setName(updatableWallet.getName());
+
+        log.debug("REST request to update Wallet : {}", wallet);
         Wallet result = walletRepository.save(wallet);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, wallet.getId().toString()))
@@ -90,9 +125,10 @@ public class WalletResource {
      */
     @GetMapping("/wallets")
     @Timed
+    @Secured(AuthoritiesConstants.USER)
     public ResponseEntity<List<Wallet>> getAllWallets(Pageable pageable) {
         log.debug("REST request to get a page of Wallets");
-        Page<Wallet> page = walletRepository.findAll(pageable);
+        Page<Wallet> page = walletRepository.findByOwnerIsCurrentUser(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/wallets");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -105,10 +141,22 @@ public class WalletResource {
      */
     @GetMapping("/wallets/{id}")
     @Timed
+    @Secured(AuthoritiesConstants.USER)
     public ResponseEntity<Wallet> getWallet(@PathVariable Long id) {
         log.debug("REST request to get Wallet : {}", id);
-        Optional<Wallet> wallet = walletRepository.findById(id);
-        return ResponseUtil.wrapOrNotFound(wallet);
+        Optional<Wallet> optionalWallet = walletRepository.findById(id);
+
+        if(!optionalWallet.isPresent()){
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        }
+
+        Wallet wallet = optionalWallet.get();
+
+        if(!userService.getCurrentUser().getId().equals(wallet.getOwner().getId())){
+            throw new BadRequestAlertException("You not have permission", ENTITY_NAME, "unauthorize");
+        }
+
+        return ResponseUtil.wrapOrNotFound(optionalWallet);
     }
 
     /**
@@ -119,8 +167,21 @@ public class WalletResource {
      */
     @DeleteMapping("/wallets/{id}")
     @Timed
+    @Secured(AuthoritiesConstants.USER)
     public ResponseEntity<Void> deleteWallet(@PathVariable Long id) {
         log.debug("REST request to delete Wallet : {}", id);
+
+        Optional<Wallet> optionalWallet = walletRepository.findById(id);
+
+        if(!optionalWallet.isPresent()){
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        }
+
+        Wallet wallet = optionalWallet.get();
+
+        if(!userService.getCurrentUser().getId().equals(wallet.getOwner().getId())){
+            throw new BadRequestAlertException("You not have permission", ENTITY_NAME, "unauthorize");
+        }
 
         walletRepository.deleteById(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();

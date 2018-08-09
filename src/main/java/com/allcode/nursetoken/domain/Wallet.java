@@ -2,7 +2,9 @@ package com.allcode.nursetoken.domain;
 
 import com.allcode.nursetoken.service.util.CryptUtils;
 import com.allcode.nursetoken.service.util.MiddlewareRequest;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.json.JSONObject;
 
 import javax.persistence.*;
@@ -26,24 +28,34 @@ public class Wallet extends AbstractAuditingEntity implements Serializable {
     private Long id;
 
     @NotNull
+    @Size(min = 1, max = 50)
     @Column(name = "address", nullable = false)
     private String address;
 
     @NotNull
-    @Column(name = "private_key", nullable = false)
-    private String privateKey;
+    @Column(name = "encripted_private_key", nullable = false, updatable = false)
+    @JsonIgnore
+    private String encriptedPrivateKey;
 
     @NotNull
-    @Column(name = "public_key", nullable = false)
-    private String publicKey;
+    @Column(name = "encripted_public_key", nullable = false, updatable = false)
+    @JsonIgnore
+    private String encriptedPublicKey;
 
     @NotNull
-    @Column(name = "public_key_hash", nullable = false)
-    private String publicKeyHash;
+    @Column(name = "encripted_public_key_hash", nullable = false, updatable = false)
+    @JsonIgnore
+    private String encriptedPublicKeyHash;
 
     @NotNull
-    @Column(name = "wif", nullable = false)
-    private String wif;
+    @Column(name = "encripted_wif", nullable = false, updatable = false)
+    @JsonIgnore
+    private String encriptedWif;
+
+    @NotNull
+    @Size(min = 1, max = 50)
+    @Column(name = "name", nullable = false)
+    private String name;
 
     @ManyToOne(optional = false)
     @NotNull
@@ -72,70 +84,113 @@ public class Wallet extends AbstractAuditingEntity implements Serializable {
         String key = System.getenv("PASSPHRASE_VALUE");
         String url = System.getenv("NEO_API_URL") + "/wallet/new";
         JSONObject response = MiddlewareRequest.post(url, null);
+
+        if(!response.has("address")){
+            return null;
+        }
+
+        CryptUtils.encrypt(response.getString("address"), key);
         Wallet wallet = new Wallet();
         wallet.setAddress(response.getString("address"));
-        wallet.setPrivateKey(CryptUtils.encrypt(response.getString("private_key"), key));
-        wallet.setPublicKey(CryptUtils.encrypt(response.getString("public_key"), key));
-        wallet.setPublicKeyHash(CryptUtils.encrypt(response.getString("public_key_hash"), key));
-        wallet.setWif(CryptUtils.encrypt(response.getString("wif"), key));
+        wallet.setEncriptedPrivateKey(CryptUtils.encrypt(response.getString("private_key"), key));
+        wallet.setEncriptedPublicKey(CryptUtils.encrypt(response.getString("public_key"), key));
+        wallet.setEncriptedPublicKeyHash(CryptUtils.encrypt(response.getString("public_key_hash"), key));
+        wallet.setEncriptedWif(CryptUtils.encrypt(response.getString("wif"), key));
         wallet.setOwner(user);
+        wallet.setName(user.getFirstName() + "'s Wallet");
         return wallet;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setAddress(String address) {
         this.address = address;
     }
 
-    public String getPrivateKey() {
-        return privateKey;
+    public String getEncriptedPrivateKey() {
+        return encriptedPrivateKey;
     }
 
-    public Wallet privateKey(String privateKey) {
-        this.privateKey = privateKey;
+    public String getPrivateKey() {
+        if(encriptedPrivateKey == null){
+            return null;
+        }
+        return CryptUtils.decrypt(encriptedPrivateKey, System.getenv("PASSPHRASE_VALUE"));
+    }
+
+    public Wallet encriptedPrivateKey(String encriptedPrivateKey) {
+        this.encriptedPrivateKey = encriptedPrivateKey;
         return this;
     }
 
-    public void setPrivateKey(String privateKey) {
-        this.privateKey = privateKey;
+    public void setEncriptedPrivateKey(String encriptedPrivateKey) {
+        this.encriptedPrivateKey = encriptedPrivateKey;
+    }
+
+    public String getEncriptedPublicKey() {
+        return encriptedPublicKey;
     }
 
     public String getPublicKey() {
-        return publicKey;
+        if(encriptedPublicKey == null){
+            return null;
+        }
+        return CryptUtils.decrypt(encriptedPublicKey, System.getenv("PASSPHRASE_VALUE"));
     }
 
-    public Wallet publicKey(String publicKey) {
-        this.publicKey = publicKey;
+    public Wallet encriptedPublicKey(String encriptedPublicKey) {
+        this.encriptedPublicKey = encriptedPublicKey;
         return this;
     }
 
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
+    public void setEncriptedPublicKey(String encriptedPublicKey) {
+        this.encriptedPublicKey = encriptedPublicKey;
+    }
+
+    public String getEncriptedPublicKeyHash() {
+        return encriptedPublicKeyHash;
     }
 
     public String getPublicKeyHash() {
-        return publicKeyHash;
+        if(encriptedPublicKeyHash == null){
+            return null;
+        }
+        return CryptUtils.decrypt(encriptedPublicKeyHash, System.getenv("PASSPHRASE_VALUE"));
     }
 
-    public Wallet publicKeyHash(String publicKeyHash) {
-        this.publicKeyHash = publicKeyHash;
+    public Wallet encriptedPublicKeyHash(String encriptedPublicKeyHash) {
+        this.encriptedPublicKeyHash = encriptedPublicKeyHash;
         return this;
     }
 
-    public void setPublicKeyHash(String publicKeyHash) {
-        this.publicKeyHash = publicKeyHash;
+    public void setEncriptedPublicKeyHash(String encriptedPublicKeyHash) {
+        this.encriptedPublicKeyHash = encriptedPublicKeyHash;
+    }
+
+    public String getEncriptedWif() {
+        return encriptedWif;
     }
 
     public String getWif() {
-        return wif;
+        if(encriptedWif == null){
+            return null;
+        }
+        return CryptUtils.decrypt(encriptedWif, System.getenv("PASSPHRASE_VALUE"));
     }
 
-    public Wallet wif(String wif) {
-        this.wif = wif;
+    public Wallet encriptedWif(String encriptedWif) {
+        this.encriptedWif = encriptedWif;
         return this;
     }
 
-    public void setWif(String wif) {
-        this.wif = wif;
+    public void setEncriptedWif(String encriptedWif) {
+        this.encriptedWif = encriptedWif;
     }
 
     public User getOwner() {
