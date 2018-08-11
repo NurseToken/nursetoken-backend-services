@@ -21,4 +21,6 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
     @Query("select wallet from Wallet wallet where wallet.owner.login = ?#{principal.username}")
     Page<Wallet> findByOwnerIsCurrentUser(Pageable pageable);
 
+    //Wallet findByWif(String wif);
+
 }

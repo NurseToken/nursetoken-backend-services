@@ -101,6 +101,27 @@ public class Wallet extends AbstractAuditingEntity implements Serializable {
         return wallet;
     }
 
+    public static Wallet importWifFromApiNeo(ImportableWallet importableWallet, User user){
+        String key = System.getenv("PASSPHRASE_VALUE");
+        String url = System.getenv("NEO_API_URL") + "/get_data_from_wif/" + importableWallet.getWif();
+        JSONObject response = MiddlewareRequest.get(url);
+
+        if(!response.has("address")){
+            return null;
+        }
+
+        CryptUtils.encrypt(response.getString("address"), key);
+        Wallet wallet = new Wallet();
+        wallet.setAddress(response.getString("address"));
+        wallet.setEncriptedPrivateKey(CryptUtils.encrypt(response.getString("private_key"), key));
+        wallet.setEncriptedPublicKey(CryptUtils.encrypt(response.getString("public_key"), key));
+        wallet.setEncriptedPublicKeyHash(CryptUtils.encrypt(response.getString("public_key_hash"), key));
+        wallet.setEncriptedWif(CryptUtils.encrypt(response.getString("wif"), key));
+        wallet.setOwner(user);
+        wallet.setName(importableWallet.getName());
+        return wallet;
+    }
+
     public String getName() {
         return name;
     }
