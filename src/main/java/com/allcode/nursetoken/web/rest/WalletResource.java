@@ -1,5 +1,6 @@
 package com.allcode.nursetoken.web.rest;
 
+import com.allcode.nursetoken.domain.ImportableWallet;
 import com.allcode.nursetoken.domain.UpdatableWallet;
 import com.allcode.nursetoken.domain.User;
 import com.allcode.nursetoken.security.AuthoritiesConstants;
@@ -133,6 +134,38 @@ public class WalletResource {
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
+    /**
+     * POST  /wallets/import .
+     *
+     * @return the ResponseEntity with status 200 (OK) and with body the wallet, or with status 404 (Not Found)
+     * * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @PostMapping("/wallets/import")
+    @Timed
+    @Secured(AuthoritiesConstants.USER)
+    public ResponseEntity<Wallet> getWallet(
+        @Valid  @RequestBody ImportableWallet importableWallet
+    ) throws URISyntaxException{
+        User currentUser = userService.getCurrentUser();
+
+        /*Wallet repeatWallet = walletRepository.findByWif(importableWallet.getWif());
+
+        if(repeatWallet != null){
+            throw new BadRequestAlertException("Wif already exists", ENTITY_NAME, "wifexists");
+        }*/
+
+        Wallet newWallet = Wallet.importWifFromApiNeo(importableWallet, currentUser);
+
+        if (newWallet == null) {
+            throw new BadRequestAlertException("Invalid Wif", ENTITY_NAME, "invalidwif");
+        }
+
+        log.debug("REST request to save Wallet : {}", newWallet);
+        Wallet result = walletRepository.save(newWallet);
+        return ResponseEntity.created(new URI("/api/wallets/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
+            .body(result);
+    }
     /**
      * GET  /wallets/:id : get the "id" wallet.
      *
