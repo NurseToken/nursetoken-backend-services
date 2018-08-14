@@ -138,13 +138,6 @@ public class Wallet extends AbstractAuditingEntity implements Serializable {
         return encriptedPrivateKey;
     }
 
-    public String getPrivateKey() {
-        if(encriptedPrivateKey == null){
-            return null;
-        }
-        return CryptUtils.decrypt(encriptedPrivateKey, System.getenv("PASSPHRASE_VALUE"));
-    }
-
     public Wallet encriptedPrivateKey(String encriptedPrivateKey) {
         this.encriptedPrivateKey = encriptedPrivateKey;
         return this;
@@ -156,13 +149,6 @@ public class Wallet extends AbstractAuditingEntity implements Serializable {
 
     public String getEncriptedPublicKey() {
         return encriptedPublicKey;
-    }
-
-    public String getPublicKey() {
-        if(encriptedPublicKey == null){
-            return null;
-        }
-        return CryptUtils.decrypt(encriptedPublicKey, System.getenv("PASSPHRASE_VALUE"));
     }
 
     public Wallet encriptedPublicKey(String encriptedPublicKey) {
@@ -178,13 +164,6 @@ public class Wallet extends AbstractAuditingEntity implements Serializable {
         return encriptedPublicKeyHash;
     }
 
-    public String getPublicKeyHash() {
-        if(encriptedPublicKeyHash == null){
-            return null;
-        }
-        return CryptUtils.decrypt(encriptedPublicKeyHash, System.getenv("PASSPHRASE_VALUE"));
-    }
-
     public Wallet encriptedPublicKeyHash(String encriptedPublicKeyHash) {
         this.encriptedPublicKeyHash = encriptedPublicKeyHash;
         return this;
@@ -196,13 +175,6 @@ public class Wallet extends AbstractAuditingEntity implements Serializable {
 
     public String getEncriptedWif() {
         return encriptedWif;
-    }
-
-    public String getWif() {
-        if(encriptedWif == null){
-            return null;
-        }
-        return CryptUtils.decrypt(encriptedWif, System.getenv("PASSPHRASE_VALUE"));
     }
 
     public Wallet encriptedWif(String encriptedWif) {
@@ -253,10 +225,10 @@ public class Wallet extends AbstractAuditingEntity implements Serializable {
         return "Wallet{" +
             "id=" + getId() +
             ", address='" + getAddress() + "'" +
-            ", privateKey='" + getPrivateKey() + "'" +
-            ", publicKey='" + getPublicKey() + "'" +
-            ", publicKeyHash='" + getPublicKeyHash() + "'" +
-            ", wif='" + getWif() + "'" +
+            ", privateKey='" + getEncriptedPrivateKey() + "'" +
+            ", publicKey='" + getEncriptedPublicKey() + "'" +
+            ", publicKeyHash='" + getEncriptedPublicKey() + "'" +
+            ", wif='" + getEncriptedWif() + "'" +
             "}";
     }
 }
