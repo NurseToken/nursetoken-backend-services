@@ -1,16 +1,15 @@
 package com.allcode.nursetoken.web.rest;
 
-import com.allcode.nursetoken.domain.ImportableWallet;
-import com.allcode.nursetoken.domain.UpdatableWallet;
-import com.allcode.nursetoken.domain.User;
+import com.allcode.nursetoken.domain.*;
+import com.allcode.nursetoken.repository.TokenRepository;
 import com.allcode.nursetoken.security.AuthoritiesConstants;
 import com.allcode.nursetoken.service.UserService;
 import com.codahale.metrics.annotation.Timed;
-import com.allcode.nursetoken.domain.Wallet;
 import com.allcode.nursetoken.repository.WalletRepository;
 import com.allcode.nursetoken.web.rest.errors.BadRequestAlertException;
 import com.allcode.nursetoken.web.rest.util.HeaderUtil;
 import com.allcode.nursetoken.web.rest.util.PaginationUtil;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +44,9 @@ public class WalletResource {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    TokenRepository tokenRepository;
 
     public WalletResource(WalletRepository walletRepository) {
         this.walletRepository = walletRepository;
@@ -216,7 +218,42 @@ public class WalletResource {
             throw new BadRequestAlertException("You not have permission", ENTITY_NAME, "unauthorize");
         }
 
+        List<Wallet> currentUserWallets = walletRepository.findByOwnerIsCurrentUser();
+        if(currentUserWallets.size() == 1){
+            throw new BadRequestAlertException("You have only one wallet", ENTITY_NAME, "onlyonewallet");
+        }
+
         walletRepository.deleteById(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
+    }
+
+    /**
+     * POST  /wallets/balance/:id : the balance for wallet with "id".
+     *
+     * @param id the id of the wallet to get balance
+     * @return the ResponseEntity with status 200 (OK)
+     */
+    @PostMapping("/wallets/balance/{id}")
+    @Timed
+    @Secured(AuthoritiesConstants.USER)
+    public ResponseEntity<ObjectNode> balanceWallet(@PathVariable Long id) {
+        log.debug("REST request to get balance for Wallet : {}", id);
+
+        Optional<Wallet> optionalWallet = walletRepository.findById(id);
+
+        if(!optionalWallet.isPresent()){
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        }
+
+        Wallet wallet = optionalWallet.get();
+
+        if(!userService.getCurrentUser().getId().equals(wallet.getOwner().getId())){
+            throw new BadRequestAlertException("You not have permission", ENTITY_NAME, "unauthorize");
+        }
+
+
+        ObjectNode balance = wallet.getBalance(tokenRepository.findAll());
+
+        return ResponseEntity.ok().body(balance);
     }
 }
