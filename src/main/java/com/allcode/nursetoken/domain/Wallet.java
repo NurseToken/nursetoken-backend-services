@@ -5,12 +5,17 @@ import com.allcode.nursetoken.service.util.MiddlewareRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.json.JSONObject;
+import org.springframework.boot.jackson.JsonObjectDeserializer;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -120,6 +125,52 @@ public class Wallet extends AbstractAuditingEntity implements Serializable {
         wallet.setOwner(user);
         wallet.setName(importableWallet.getName());
         return wallet;
+    }
+
+    @JsonIgnore
+    public ObjectNode getBalance(List<Token> tokens){
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode balance = mapper.createObjectNode();
+        JSONObject data = MiddlewareRequest.get(System.getenv("NEO_API_URL") + "/accountstate/" + this.getAddress());
+
+        if(!data.has("response")){
+            balance.put("NEO", 0);
+            balance.put("GAS", 0);
+        }else{
+            JSONObject balances = data.getJSONObject("response").getJSONObject("balances");
+
+            if(balances.has("neo")){
+                balance.put("NEO", balances.getBigInteger("neo"));
+            }else{
+                balance.put("NEO", 0);
+            }
+
+            if(balances.has("gas")){
+                balance.put("GAS", balances.getBigInteger("gas"));
+            }else{
+                balance.put("GAS", 0);
+            }
+        }
+
+        if(tokens.size() == 0){
+            return balance;
+        }
+
+
+        for(Token token: tokens){
+            data = MiddlewareRequest.get(
+                System.getenv("NEO_API_URL") + "/get_token_balance/" + token.getScriptHash() + "/" + this.getAddress()
+            );
+
+            if(!data.has("response")){
+                balance.put(token.getSymbol(), 0);
+            }else{
+                JSONObject response = data.getJSONObject("response");
+                balance.put(token.getSymbol(), response.getBigInteger("value"));
+            }
+        }
+
+        return balance;
     }
 
     public String getName() {
