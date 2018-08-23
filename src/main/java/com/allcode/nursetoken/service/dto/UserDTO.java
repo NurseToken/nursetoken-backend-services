@@ -35,6 +35,12 @@ public class UserDTO {
     @Size(min = 5, max = 254)
     private String email;
 
+    @Size(max = 15)
+    private String mobile;
+
+    @Size(max = 300)
+    private String description;
+
     @Size(max = 256)
     private String imageUrl;
 
@@ -63,6 +69,8 @@ public class UserDTO {
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
         this.email = user.getEmail();
+        this.mobile = user.getMobile();
+        this.description = user.getDescription();
         this.activated = user.getActivated();
         this.imageUrl = user.getImageUrl();
         this.langKey = user.getLangKey();
@@ -114,6 +122,14 @@ public class UserDTO {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    public String getMobile() { return mobile; }
+
+    public void setMobile(String mobile) { this.mobile = mobile; }
+
+    public String getDescription() { return description; }
+
+    public void setDescription(String description) { this.description = description; }
 
     public String getImageUrl() {
         return imageUrl;
@@ -186,6 +202,8 @@ public class UserDTO {
             ", firstName='" + firstName + '\'' +
             ", lastName='" + lastName + '\'' +
             ", email='" + email + '\'' +
+            ", mobile='" + mobile + '\'' +
+            ", description='" + description + '\'' +
             ", imageUrl='" + imageUrl + '\'' +
             ", activated=" + activated +
             ", langKey='" + langKey + '\'' +
